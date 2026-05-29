@@ -24,7 +24,7 @@ resource "null_resource" "train" {
   depends_on = [aws_s3_bucket.model_bucket]
 
   provisioner "local-exec" {
-    command = "pip install scikit-learn boto3 && python train.py"
+    command = "pip install scikit-learn boto3 && python ${path.root}/../../train.py"
     environment = {
       S3_BUCKET = aws_s3_bucket.model_bucket.bucket
     }
