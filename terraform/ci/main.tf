@@ -22,7 +22,8 @@ resource "random_id" "suffix" {
 }
 
 # 2. Train model and upload to S3
-# train.py handles: training → packaging → uploading correctly
+# numpy<2.0 required — SageMaker scikit-learn:1.2 container uses numpy 1.x
+# model.pkl must be pickled with same numpy version or it fails to load
 resource "null_resource" "train" {
   depends_on = [aws_s3_bucket.model_bucket]
 
@@ -31,7 +32,7 @@ resource "null_resource" "train" {
   }
 
   provisioner "local-exec" {
-    command = "pip install scikit-learn boto3 && python ${path.root}/../../train.py"
+    command = "pip install scikit-learn boto3 'numpy<2.0' && python ${path.root}/../../train.py"
     environment = {
       S3_BUCKET = aws_s3_bucket.model_bucket.bucket
     }
