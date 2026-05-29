@@ -21,7 +21,8 @@ resource "random_id" "suffix" {
   byte_length = 4
 }
 
-# 2. Force retrain on every CI run by using a timestamp trigger
+# 2. Train model and upload to S3
+# train.py handles: training → packaging → uploading correctly
 resource "null_resource" "train" {
   depends_on = [aws_s3_bucket.model_bucket]
 
@@ -37,46 +38,7 @@ resource "null_resource" "train" {
   }
 }
 
-# 3. Repack model correctly after training
-resource "null_resource" "repack" {
-  depends_on = [null_resource.train]
-
-  triggers = {
-    always_run = timestamp()
-  }
-
-  provisioner "local-exec" {
-    command = <<EOT
-      set -e
-
-      # 1. Create correct folder structure
-      mkdir -p model_package/code
-
-      # 2. Copy model and inference script
-      cp model.pkl model_package/
-      cp ${path.root}/../../inference.py model_package/code/
-
-      # 3. Verify inference.py is there
-      ls -la model_package/code/
-
-      # 4. Repack correctly — no extra wrapper layer
-      cd model_package
-      tar -czvf ../trainedModel.tar.gz code/ model.pkl
-
-      # 5. Verify structure
-      cd ..
-      echo "--- Verifying tar.gz structure ---"
-      tar -tzf trainedModel.tar.gz
-
-      # 6. Upload to S3
-      aws s3 cp trainedModel.tar.gz s3://${aws_s3_bucket.model_bucket.bucket}/trainedModel.tar.gz
-
-      echo "--- Upload complete ---"
-    EOT
-  }
-}
-
-# 4. Output bucket name for cd/main.tf
+# 3. Output bucket name for cd/main.tf
 output "s3_bucket" {
   value = aws_s3_bucket.model_bucket.bucket
 }
