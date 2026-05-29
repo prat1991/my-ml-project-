@@ -1,0 +1,31 @@
+# .github/workflows/cd.yml
+name: CD - Deploy Model to SageMaker
+
+on:
+  workflow_dispatch:     # ← this creates the "Run workflow" button in GitHub UI
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - uses: hashicorp/setup-terraform@v3
+
+      # Run terraform/cd/main.tf (creates SageMaker model + endpoint + runs predict.py)
+      - name: Terraform Init
+        working-directory: terraform/cd
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: terraform/cd
+        run: |
+          terraform apply -auto-approve \
+            -var="s3_bucket=${{ secrets.S3_BUCKET }}" \
+            -var="sagemaker_role_arn=${{ secrets.SAGEMAKER_ROLE_ARN }}"

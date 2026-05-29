@@ -1,0 +1,30 @@
+AWS
+Click IAM -> Click Users -> Click Create Users->
+Name=github-actions-ml
+Attach Policies: AmazonS3FullAccess, AmazonSageMakerFullAccess, IAMFullAccess 
+Create Access Key → Application running outside AWS
+Copy: AWS_ACCESS_KEY_ID & AWS_SECRET_ACCESS_KEY
+Create Sagemaker role
+Copy: SAGEMAKER_ROLE_ARN
+
+GITHUB
+create a public remote repo
+add access keys to github so that github can talk to AWS
+Click Repo -> Click Settings -> Click Secrets & Variables -> Click Actions -> Click New repository secrets
+add AWS_ACCESS_KEY_ID 
+add AWS_SECRET_ACCESS_KEY 
+add SAGEMAKER_ROLE_ARNs
+create project structure locally & push
+
+.github/workflows/ci.yml
+1- creates s3 bucket using terraform/ci/ci.tf
+2- runs train.py
+3- creates trainedModel.tar.gz
+4- run terraform/ci/main.tf to creates s3 bucket & runs train.py & saves the trained model file(trainedModel.tar.gz) to s3 bucket  
+
+
+CD is triggered manually by clicking "Deploy Model" in GitHub
+
+.github/workflows/cd.yml
+1- run terraform/cd/cd.tf which looks up s3 bucket to get the  the trained model file(trainedModel.tar.gz) to create a sagemaker model
+& runs predict.py which calls sagemaker function to return prediction as part of sagemaker api endpoint
