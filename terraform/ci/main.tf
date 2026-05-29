@@ -11,6 +11,8 @@ provider "aws" {
   region = "us-east-1"
 }
 
+
+
 # 1. Create S3 bucket (created once, reused across runs)
 resource "aws_s3_bucket" "model_bucket" {
   bucket        = "my-ml-models-${random_id.suffix.hex}"
