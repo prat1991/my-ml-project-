@@ -15,4 +15,4 @@ try:
     result = json.loads(response["Body"].read())
     print("Prediction:", result)
 except Exception as e:
-    print("Failed to call sagemaker prediction endpoint")
+    print("Failed to call sagemaker endpoint")
