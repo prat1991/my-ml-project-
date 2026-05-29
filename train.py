@@ -21,4 +21,4 @@ with tarfile.open("trainedModel.tar.gz", "w:gz") as tar:
 s3 = boto3.client("s3")
 bucket = os.environ["S3_BUCKET"]          # set by Terraform output
 s3.upload_file("trainedModel.tar.gz", bucket, "trainedModel.tar.gz")
-print(f"Model uploaded to s3://{bucket}/trainedModel.tar.gz"){\rtf1}
+print(f"Model uploaded to s3://{bucket}/trainedModel.tar.gz")
