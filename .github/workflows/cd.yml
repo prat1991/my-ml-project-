@@ -2,7 +2,7 @@
 name: CD - Deploy Model to SageMaker
 
 on:
-  workflow_dispatch:     # ← this creates the "Run workflow" button in GitHub UI
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -18,14 +18,22 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v3
 
-      # Run terraform/cd/main.tf (creates SageMaker model + endpoint + runs predict.py)
+      # FIX: Find the bucket by prefix, no secrets or state needed
+      - name: Get S3 bucket name from AWS
+        run: |
+          BUCKET=$(aws s3api list-buckets \
+            --query "Buckets[?starts_with(Name, 'my-ml-models-')].Name | [0]" \
+            --output text)
+          echo "S3_BUCKET=$BUCKET" >> $GITHUB_ENV
+          echo "Found bucket: $BUCKET"
+
       - name: Terraform Init
         working-directory: terraform/cd
         run: terraform init
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -var="s3_bucket=${{ secrets.S3_BUCKET }}" -var="sagemaker_role_arn=${{ secrets.SAGEMAKER_ROLE_ARN }}"
         working-directory: terraform/cd
+        run: terraform apply -auto-approve -var="s3_bucket=${{ env.S3_BUCKET }}" -var="sagemaker_role_arn=${{ secrets.SAGEMAKER_ROLE_ARN }}"
         env:
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
