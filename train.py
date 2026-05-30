@@ -2,6 +2,7 @@ import boto3, tarfile, os, pickle
 from sklearn.datasets import load_iris
 from sklearn.ensemble import RandomForestClassifier
 
+
 # 1. Train
 X, y = load_iris(return_X_y=True)
 model = RandomForestClassifier(n_estimators=10)
