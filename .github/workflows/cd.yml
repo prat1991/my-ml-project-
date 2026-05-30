@@ -21,19 +21,11 @@ jobs:
 
       - uses: hashicorp/setup-terraform@v3
 
-      # Get the latest bucket CI just created (sorted by creation date)
-      - name: Get latest S3 bucket name from AWS
-        run: |
-          BUCKET=$(aws s3api list-buckets \
-            --query "sort_by(Buckets, &CreationDate)[-1:][?starts_with(Name, 'my-ml-models-')].Name | [0]" \
-            --output text)
-          echo "S3_BUCKET=$BUCKET" >> $GITHUB_ENV
-          echo "Found bucket: $BUCKET"
-
       - name: Terraform Init
         working-directory: terraform/cd
         run: terraform init
 
+      # Fixed bucket name — no lookup needed, always matches CI
       - name: Terraform Apply
         working-directory: terraform/cd
-        run: terraform apply -auto-approve -var="s3_bucket=${{ env.S3_BUCKET }}" -var="sagemaker_role_arn=${{ secrets.SAGEMAKER_ROLE_ARN }}"
+        run: terraform apply -auto-approve -var="s3_bucket=my-ml-models-iris" -var="sagemaker_role_arn=${{ secrets.SAGEMAKER_ROLE_ARN }}"
