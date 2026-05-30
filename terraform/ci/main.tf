@@ -28,7 +28,7 @@ resource "null_resource" "train" {
   }
 
   provisioner "local-exec" {
-	command = "pip install 'scikit-learn==1.2.*' boto3 'numpy<2.0' && python ..."
+	command = "pip install 'scikit-learn==1.2.*' boto3 'numpy<2.0' && python ${path.module}/../../train.py"
     environment = {
       S3_BUCKET = aws_s3_bucket.model_bucket.bucket
     }
