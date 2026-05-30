@@ -59,12 +59,3 @@ resource "aws_sagemaker_endpoint" "iris_endpoint" {
     create_before_destroy = true
   }
 }
-
-# 4. Run predict.py after endpoint is ready
-resource "null_resource" "predict" {
-  depends_on = [aws_sagemaker_endpoint.iris_endpoint]
-
-  provisioner "local-exec" {
-    command = "python predict.py ${aws_sagemaker_endpoint.iris_endpoint.name}"
-  }
-}

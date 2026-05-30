@@ -25,7 +25,17 @@ jobs:
         working-directory: terraform/cd
         run: terraform init
 
-      # Fixed bucket name — no lookup needed, always matches CI
       - name: Terraform Apply
         working-directory: terraform/cd
         run: terraform apply -auto-approve -var="s3_bucket=my-ml-models-iris" -var="sagemaker_role_arn=${{ secrets.SAGEMAKER_ROLE_ARN }}"
+
+      - name: Install dependencies
+        run: pip install boto3
+
+      - name: Run Prediction
+        run: python predict.py iris-endpoint
+
+      - name: Destroy endpoint
+        if: always()
+        working-directory: terraform/cd
+        run: terraform destroy -auto-approve -var="s3_bucket=my-ml-models-iris" -var="sagemaker_role_arn=${{ secrets.SAGEMAKER_ROLE_ARN }}"
