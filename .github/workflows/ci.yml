@@ -28,6 +28,11 @@ jobs:
       - name: Terraform Init
         working-directory: terraform/ci
         run: terraform init
+        
+      - name: Import existing S3 bucket
+        working-directory: terraform/ci
+        run: terraform import aws_s3_bucket.model_bucket my-ml-models-iris || true
+        # "|| true" means if bucket doesn't exist yet, don't fail
 
       - name: Terraform Apply
         working-directory: terraform/ci
