@@ -4,7 +4,7 @@ runtime = boto3.client("sagemaker-runtime", region_name="us-east-1")
 endpoint = sys.argv[1]
 
 request = json.dumps({"instances": [[5.1, 3.5, 1.4, 0.2]]})
-
+\
 try:
     response = runtime.invoke_endpoint(
         EndpointName=endpoint,
