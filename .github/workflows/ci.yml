@@ -1,6 +1,8 @@
 # .github/workflows/ci.yml
 name: CI-Train&Upload Model To S3
 
+#Event Listener- When we commit & push to main, push event is generated
+#Event Handler- push event generation auto triggers CI execution
 on:
   push:
     branches: [main]
