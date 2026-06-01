@@ -43,3 +43,4 @@ jobs:
         id: bucket
         working-directory: terraform/ci
         run: echo "s3_bucket=$(terraform output -raw s3_bucket)" >> $GITHUB_OUTPUT
+        
