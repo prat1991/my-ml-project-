@@ -49,4 +49,4 @@ jobs:
       - name: Destroy endpoint
         if: always()
         working-directory: terraform/cd
-        run: terraform destroy -auto-approve -var="s3_bucket=my-ml-models-iris" -var="sagemaker_role_arn=${{ secrets.SAGEMAKER_ROLE_ARN }}"
+        run: sleep 600 && terraform destroy -auto-approve -var="s3_bucket=my-ml-models-iris" -var="sagemaker_role_arn=${{ secrets.SAGEMAKER_ROLE_ARN }}"
