@@ -1,6 +1,7 @@
 # predict.py
 import boto3, json, sys
 
+
 # SageMaker runtime client — this is the interface to invoke deployed endpoints
 # region must match where your endpoint is deployed
 runtime = boto3.client("sagemaker-runtime", region_name="us-east-1")
