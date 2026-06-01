@@ -1,5 +1,5 @@
 # .github/workflows/ci.yml
-name: CI - Train and Upload Model To S3
+name: CI-Train&Upload Model To S3
 
 on:
   push:
