@@ -1,5 +1,5 @@
 # .github/workflows/cd.yml
-name: CD - Deploy Model to SageMaker
+name: CD - Deploy Trained Model to SageMaker
 
 on:
   workflow_run:
