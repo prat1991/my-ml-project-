@@ -32,13 +32,16 @@ jobs:
         run: terraform apply -auto-approve -var="s3_bucket=my-ml-models-iris" -var="sagemaker_role_arn=${{ secrets.SAGEMAKER_ROLE_ARN }}"
 
       - name: Install dependencies
-        run: pip install boto3 numpy           # numpy added for PSI/accuracy
+        run: pip install boto3 numpy scikit-learn   # numpy + scikit-learn for PSI/accuracy + Iris batch
 
       # Predict + monitor. Writes decision=retrain|fix_labels|none to outputs.
       - name: Run Prediction & Monitor
         id: monitor                            # NEW: id so we can read the decision
         env:
           S3_BUCKET: my-ml-models-iris         # NEW: predict.py reads the baseline from here
+          # NEW: test toggles — leave commented for normal (healthy) runs.
+          DRIFT_SHIFT: "1.5"                 # forces PSI past 0.2 -> decision "retrain"
+          # BREAK_LABELS: "1"                  # corrupts labels    -> decision "fix_labels"
         run: python predict.py iris-endpoint
 
       # NEW: PSI > 0.2 -> re-run CI. train.py picks up prod_data.csv from S3,
