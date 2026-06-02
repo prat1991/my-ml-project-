@@ -23,9 +23,16 @@ rng = np.random.default_rng(0)
 idx = rng.choice(len(Xall), size=60, replace=True)
 X = Xall[idx].astype(float)
 y_true = yall[idx].tolist()
-# To test the branches:
-drift  -> X = X + 1.5          #(PSI jumps past 0.2)
-#   labels -> y_true = (yall[idx] ^ 1).tolist()   (corrupt labels -> accuracy drops)
+
+# NEW: optional failure simulators — set via env vars, no code edits needed.
+#   DRIFT_SHIFT=1.5  -> shifts inputs so PSI crosses 0.2  (triggers retrain)
+#   BREAK_LABELS=1   -> corrupts labels so accuracy drops (triggers fix_labels)
+# Default (both unset) = healthy traffic -> decision "none".
+shift = float(os.environ.get("DRIFT_SHIFT", "0"))
+if shift:
+    X = X + shift
+if os.environ.get("BREAK_LABELS") == "1":
+    y_true = (np.array(y_true) ^ 1).tolist()
 
 # 1. Predictions from the live endpoint  (ORIGINAL invoke — now sends the batch)
 resp = runtime.invoke_endpoint(
