@@ -25,12 +25,14 @@ X = Xall[idx].astype(float)
 y_true = yall[idx].tolist()
 
 # NEW: optional failure simulators — set via env vars, no code edits needed.
-#   DRIFT_SHIFT=1.5  -> shifts inputs so PSI crosses 0.2  (triggers retrain)
+#   DRIFT_SHIFT=0.5  -> shifts inputs so PSI crosses 0.2  (triggers retrain)
 #   BREAK_LABELS=1   -> corrupts labels so accuracy drops (triggers fix_labels)
 # Default (both unset) = healthy traffic -> decision "none".
+have_labels = True   # in production, ground truth arrives later via feedback
 shift = float(os.environ.get("DRIFT_SHIFT", "0"))
 if shift:
     X = X + shift
+    have_labels = False   # freshly drifted traffic isn't labeled yet -> PSI only
 if os.environ.get("BREAK_LABELS") == "1":
     y_true = (np.array(y_true) ^ 1).tolist()
 
@@ -58,12 +60,18 @@ for c, b in enumerate(baseline):
 max_psi = max(psi)
 print(f"PSI per feature: {[round(p, 3) for p in psi]} (max={max_psi:.3f})")
 
-# 3. ACCURACY DROP — predictions vs known true labels
-acc = float(np.mean(np.array(y_true) == np.array(y_pred)))
-print(f"Accuracy: {acc:.3f}")
+# 3. ACCURACY DROP — only when we actually have ground-truth labels.
+#    Without labels there is no accuracy signal, so we rely on PSI alone.
+acc = None
+if have_labels:
+    acc = float(np.mean(np.array(y_true) == np.array(y_pred)))
+    print(f"Accuracy: {acc:.3f}")
+else:
+    print("No ground-truth labels for this batch — skipping accuracy check.")
 
-# 4. DECISION — accuracy first: if labels are wrong, more data won't help
-if acc < ACC_THRESHOLD:
+# 4. DECISION — accuracy first (only if measured): if labels are wrong, more
+#    data won't help; otherwise fall back to the drift check.
+if acc is not None and acc < ACC_THRESHOLD:
     decision = "fix_labels"          # stop -> human relabels training data
 elif max_psi > PSI_THRESHOLD:
     decision = "retrain"             # retrain on combined train + production
