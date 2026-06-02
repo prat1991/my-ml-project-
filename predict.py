@@ -24,7 +24,7 @@ idx = rng.choice(len(Xall), size=60, replace=True)
 X = Xall[idx].astype(float)
 y_true = yall[idx].tolist()
 # To test the branches:
-#   drift  -> X = X + 1.5          (PSI jumps past 0.2)
+drift  -> X = X + 1.5          #(PSI jumps past 0.2)
 #   labels -> y_true = (yall[idx] ^ 1).tolist()   (corrupt labels -> accuracy drops)
 
 # 1. Predictions from the live endpoint  (ORIGINAL invoke — now sends the batch)
