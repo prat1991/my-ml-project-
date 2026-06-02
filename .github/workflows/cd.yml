@@ -8,6 +8,7 @@ on:
     workflows: ["CI-Train&Upload Model To S3"]
     types: [completed]
 
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
