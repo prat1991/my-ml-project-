@@ -6,6 +6,7 @@ name: CI-Train&Upload Model To S3
 on:
   push:
     branches: [main]
+  workflow_dispatch:          # NEW: lets CD re-trigger CI via `gh workflow run ci.yml`
 
 jobs:
   train:
@@ -37,7 +38,7 @@ jobs:
       - name: Terraform Init
         working-directory: terraform/ci
         run: terraform init
-        
+
       - name: Import existing S3 bucket
         working-directory: terraform/ci
         run: terraform import aws_s3_bucket.model_bucket my-ml-models-iris || true
