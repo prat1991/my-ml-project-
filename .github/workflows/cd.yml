@@ -1,6 +1,5 @@
 # .github/workflows/cd.yml
 name: CD-Deploy Model to SageMaker
-
 #Event Listener- When CI completes, workflow_run event is marked completed
 #Event Handler-workflow_run event completed status auto triggers CD execution
 on:
@@ -8,6 +7,14 @@ on:
     workflows: ["CI-Train&Upload Model To S3"]
     types: [completed]
 
+# NEW: explicit token scopes — fixes the 403 on `gh workflow run`.
+# actions:write lets CD dispatch CI; contents:read is needed for checkout
+# (specifying any permissions switches the token to explicit mode, so both
+# must be listed). Also flip repo Settings -> Actions -> General ->
+# Workflow permissions to "Read and write permissions".
+permissions:
+  actions: write
+  contents: read
 
 jobs:
   deploy:
@@ -15,26 +22,20 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-
       - uses: hashicorp/setup-terraform@v3
-
       - name: Terraform Init
         working-directory: terraform/cd
         run: terraform init
-
       - name: Terraform Apply
         working-directory: terraform/cd
         run: terraform apply -auto-approve -var="s3_bucket=my-ml-models-iris" -var="sagemaker_role_arn=${{ secrets.SAGEMAKER_ROLE_ARN }}"
-
       - name: Install dependencies
         run: pip install boto3 numpy scikit-learn   # numpy + scikit-learn for PSI/accuracy + Iris batch
-
       # Predict + monitor. Writes decision=retrain|fix_labels|none to outputs.
       - name: Run Prediction & Monitor
         id: monitor                            # NEW: id so we can read the decision
@@ -44,7 +45,6 @@ jobs:
           DRIFT_SHIFT: "1.5"                 # forces PSI past 0.2 -> decision "retrain"
           # BREAK_LABELS: "1"                  # corrupts labels    -> decision "fix_labels"
         run: python predict.py iris-endpoint
-
       # NEW: PSI > 0.2 -> re-run CI. train.py picks up prod_data.csv from S3,
       # retrains on the combined dataset, and CD redeploys.
       - name: Trigger retrain
@@ -52,14 +52,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh workflow run ci.yml
-
       # NEW: accuracy < 90% -> stop and alert; labels can't be auto-fixed.
       - name: Flag label issue
         if: steps.monitor.outputs.decision == 'fix_labels'
         run: |
           echo "::error::Accuracy < 90% — training labels need review/relabeling"
           exit 1
-
       # Tear down the endpoint to avoid ongoing AWS costs
       - name: Destroy endpoint
         if: always()
